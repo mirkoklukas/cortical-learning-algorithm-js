@@ -15,6 +15,68 @@ var select = function(key) {
 	};
 };
 
+var SpatialPooler = function (numCols, numSyns, minOverlap, desiredLocalActivity) {
+	this.columns = [];
+	this.minOverlap = minOverlap;
+	this.desiredLocalActivity = desiredLocalActivity;
+};
+
+
+
+SpatialPooler.prototype.makeSparse = function (input, columns, minOverlap, desiredLocalActivity) {
+	// 
+	var kthOverlapValue = function (columns, k) {
+		var count = 0;
+		columns.sortBy("overlap");
+		for (int i = 1, max = columns.length; i < max; i++) {
+			if(columns[i-1].overlap !== columns[i].overlap) { 
+				count < k ? count += 1 : break;
+			}
+		}
+		return columns[k-1].overlap;
+	}
+	
+	// 
+	var satOverlapBenchmark = function (benchmark) {
+		return function (column) {
+			return column.overlap > 0 && column.overlap >= benchmark;
+		};
+	} 
+	// 
+	return this.columns.map(function (column) {
+		column.computeOverlap(input)
+			.boost(minOverlap);
+			.filter(satOverlapBenchmark(kthOverlapValue(columns, desiredLocalActivity)))
+			.select("id");
+
+	})
+};
+
+SpatialPooler.prototype.initialize = function (synMatrix) { 
+	var column;
+
+	for (var c = 0; c < synMatrix.length; c++) { 
+		var column = new Column(c);
+
+		for (var i = 0; i < synMatrix[c].length; i++) {
+			if(synMatrix[c][i] > 0) 
+				column.synapses.push(new verticalSyapse(i,synMatrix[c][i]));
+		}
+		this.columns.push(column);
+	}
+
+	return this;
+};
+
+SpatialPooler.prototype.computeOverlap = function (input) {
+
+	// 
+	this.columns.forEach(function (column) {
+		column.computeOverlap(input);
+	});
+};
+
+
 
 // --------------------------
 // 
@@ -60,55 +122,55 @@ var verticalSyapse = function (end, permanence) {
 // --------------------------
 // 
 // --------------------------
-var kthOverlapValue = function (columns, k) {
+// var kthOverlapValue = function (columns, k) {
 
-	var count = 0;
-	columns.sortBy("overlap");
+// 	var count = 0;
+// 	columns.sortBy("overlap");
 
-	for (int i = 1, max = columns.length; i < max; i++) {
-		if(columns[i-1].overlap !== columns[i].overlap) { 
-			count < k ? count += 1 : break;
-		}
-	}
-	return columns[k-1].overlap;
-}
+// 	for (int i = 1, max = columns.length; i < max; i++) {
+// 		if(columns[i-1].overlap !== columns[i].overlap) { 
+// 			count < k ? count += 1 : break;
+// 		}
+// 	}
+// 	return columns[k-1].overlap;
+// }
 
-var satOverlapBenchmark = function (benchmark) {
-	return function (column) {
-		return column.overlap > 0 && column.overlap >= benchmark;
-	}
-} 
+// var satOverlapBenchmark = function (benchmark) {
+// 	return function (column) {
+// 		return column.overlap > 0 && column.overlap >= benchmark;
+// 	}
+// } 
 
-var makeSparse = function (input, columns, minOverlap) {
-	// 
-	return columns.computeOverlap(input)
-								.boost(minOverlap);
-								.filter(satOverlapBenchmark(kthOverlapValue(columns, 10)));
-};
+// var getSparseActiveColumns = function (input, columns, minOverlap, desiredLocalActivity) {
+// 	// 
+// 	return columns.computeOverlap(input)
+// 								.boost(minOverlap);
+// 								.filter(satOverlapBenchmark(kthOverlapValue(columns, desiredLocalActivity)));
+// };
 
 // --------------------------
-// 
+// Learning
 // --------------------------
 
-var learn = function (activeIds, columns, permanenceInc, permanenceDec) {
-	var permanenceInc = permanenceInc || 0.5,
-	    permanenceDec = permanenceDec || 0.5;
-	// 
-	activeColumns.forEach(function (id) {
-		columns[id].synapses = columns[id].synapses.map(function (synapse) {
-			if(synapse.active) {
-				synapse.permanence += permanenceInc;
-				synapse.permanence = Math.min(1.0, synapse.permanence );
-			} else {
-				synapse.permanence -= permanenceDec;
-				synapse.permanence = Math.min(1.0, synapse.permanence );
-			}
-			return synapse;
-		});
-	});
-	// 
+// var learn = function (activeIds, columns, permanenceInc, permanenceDec) {
+// 	var permanenceInc = permanenceInc || 0.5,
+// 	    permanenceDec = permanenceDec || 0.5;
+// 	// 
+// 	activeColumns.forEach(function (id) {
+// 		columns[id].synapses = columns[id].synapses.map(function (synapse) {
+// 			if(synapse.active) {
+// 				synapse.permanence += permanenceInc;
+// 				synapse.permanence = Math.min(1.0, synapse.permanence );
+// 			} else {
+// 				synapse.permanence -= permanenceDec;
+// 				synapse.permanence = Math.min(1.0, synapse.permanence );
+// 			}
+// 			return synapse;
+// 		});
+// 	});
+// 	// 
 
-}
+// }
 
 
 

@@ -16,7 +16,9 @@ var select = function(key) {
 };
 
 
-
+// --------------------------
+// 
+// --------------------------
 var Column = function (id) {
 	this.id = id;
 	this.synapses = [];
@@ -45,7 +47,9 @@ Columns.prototype.boost = function (minOverlap) {
 	return this;
 }
 
-
+// --------------------------
+// 
+// --------------------------
 var verticalSyapse = function (end, permanence) {
 	this.end = end;
 	this.active = false;
@@ -53,37 +57,9 @@ var verticalSyapse = function (end, permanence) {
 };
 
 
-var computeOverlap = function (columns, input) {
-	return columns.map(function(column) {
-		// 
-		var overlap = column.synapses.filter(function(synapse) {
-			synapse.active = (input[synapse.end] === 1 && synapse.permanence >= 0.2);
-			return synapse.active;
-		}).length;
-		// 
-		// if(overlap < minOverlap) overlap = 0;
-		// else overlap *= column.boost;
-		// 
-		return {id: column["id"], overlap: overlap};
-	});
-};
-
-// ---------
-// depends on minOverlap 
-// ---------
-var boost = function (columns, minOverlap) {
-	return cols.map(function (column) {
-		// 
-		var overlap = column["overlap"];
-		// 
-		if(overlap < minOverlap) overlap = 0;
-		else overlap *= boost[column["id"]];
-		// 
-		return {id: column["id"], overlap: overlap};
-	});
-};
-
-
+// --------------------------
+// 
+// --------------------------
 var kthOverlapValue = function (columns, k) {
 
 	var count = 0;
@@ -97,22 +73,22 @@ var kthOverlapValue = function (columns, k) {
 	return columns[k-1].overlap;
 }
 
-var satOverlapBenchmark = function (minOverlap) {
+var satOverlapBenchmark = function (benchmark) {
 	return function (column) {
-		return column.overlap > 0 && column.overlap >= minOverlap;
+		return column.overlap > 0 && column.overlap >= benchmark;
 	}
 } 
 
-var makeSparse = function (input, columns) {
+var makeSparse = function (input, columns, minOverlap) {
 	// 
-	var sparseActiveColumns = computeOverlap(columns,input)
-								.filter(satOverlapBenchmark(kthOverlapValue(columns, 10)))
-								.map(select("id"));
-	// 
-	return sparseActiveColumns;
+	return columns.computeOverlap(input)
+								.boost(minOverlap);
+								.filter(satOverlapBenchmark(kthOverlapValue(columns, 10)));
 };
 
-
+// --------------------------
+// 
+// --------------------------
 
 var learn = function (activeIds, columns, permanenceInc, permanenceDec) {
 	var permanenceInc = permanenceInc || 0.5,

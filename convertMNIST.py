@@ -45,11 +45,7 @@ def read(digits, dataset = "training", path = "."):
 
 if __name__ == '__main__':
 
-
     images, labels = read([0,1], 'training')
-    # imshow(images.mean(axis=0), cmap=cm.gray)
-    # print len(images[1])
-    # print len(images[1][1])
     data = "var input = ["
     pics = []
     for j in range(20):

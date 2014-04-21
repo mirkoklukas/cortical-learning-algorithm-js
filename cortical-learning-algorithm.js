@@ -6,24 +6,30 @@ if(typeof Array.sortBy !== 'function') {
 	};
 }
 
-var select = function(key) {
-	var args = [].slice.apply(key);
-	return function (obj) {
-		return args.length === 1 ? obj[key]: args.map(function (key) { 
-			return obj[key]; 
-		});
-	};
-};
-
-var SpatialPooler = function (numCols, numSyns, minOverlap, desiredLocalActivity) {
+var SpatialPooler = function (minOverlap, desiredLocalActivity) {
 	this.columns = [];
-	this.minOverlap = minOverlap;
-	this.desiredLocalActivity = desiredLocalActivity;
+	this.minOverlap = minOverlap || 10;
+	thisconnectedPerm = 0.2;
+	this.desiredLocalActivity = desiredLocalActivity || 10;
 };
 
+SpatialPooler.prototype.initialize = function (synMatrix) { 
+	var column;
 
+	for (var c = 0; c < synMatrix.length; c++) { 
+		var column = new Column(c);
 
-SpatialPooler.prototype.makeSparse = function (input, columns, minOverlap, desiredLocalActivity) {
+		for (var i = 0; i < synMatrix[c].length; i++) {
+			if(synMatrix[c][i] > 0) 
+				column.synapses.push(new verticalSyapse(i,synMatrix[c][i]));
+		}
+		this.columns.push(column);
+	}
+
+	return this;
+};
+
+SpatialPooler.prototype.getSparseRepresentation = function (input, columns, minOverlap, desiredLocalActivity) {
 	// 
 	var kthOverlapValue = function (columns, k) {
 		var count = 0;
@@ -43,40 +49,32 @@ SpatialPooler.prototype.makeSparse = function (input, columns, minOverlap, desir
 		};
 	} 
 	// 
+	var select = function(key) {
+		var args = [].slice.apply(key);
+		return function (obj) {
+			return args.length === 1 ? obj[key]: args.map(function (key) { 
+				return obj[key]; 
+			});
+		};
+	};
+	// 
 	return this.columns.map(function (column) {
 		column.computeOverlap(input)
 			.boost(minOverlap);
 			.filter(satOverlapBenchmark(kthOverlapValue(columns, desiredLocalActivity)))
-			.select("id");
+			.map(select("id"));
 
 	})
 };
 
-SpatialPooler.prototype.initialize = function (synMatrix) { 
-	var column;
 
-	for (var c = 0; c < synMatrix.length; c++) { 
-		var column = new Column(c);
 
-		for (var i = 0; i < synMatrix[c].length; i++) {
-			if(synMatrix[c][i] > 0) 
-				column.synapses.push(new verticalSyapse(i,synMatrix[c][i]));
-		}
-		this.columns.push(column);
-	}
 
-	return this;
+var verticalSyapse = function (end, permanence) {
+	this.end = end;
+	this.active = false;
+	this.permanence = permanence || 0.2;
 };
-
-SpatialPooler.prototype.computeOverlap = function (input) {
-
-	// 
-	this.columns.forEach(function (column) {
-		column.computeOverlap(input);
-	});
-};
-
-
 
 // --------------------------
 // 
@@ -84,6 +82,7 @@ SpatialPooler.prototype.computeOverlap = function (input) {
 var Column = function (id) {
 	this.id = id;
 	this.synapses = [];
+	// this.center;
 	this.neighbours = [];
 	this.boostValue = 1.0;
 	this.overlap = 0;
@@ -97,7 +96,7 @@ Column.prototype.computeOverlap = function (input) {
 	}).length;
 	//  
 	return this;
-}
+};
 
 Columns.prototype.boost = function (minOverlap) {
 	// 
@@ -107,16 +106,12 @@ Columns.prototype.boost = function (minOverlap) {
 	else overlap *= boostValue;
 	// 
 	return this;
-}
+};
 
 // --------------------------
 // 
 // --------------------------
-var verticalSyapse = function (end, permanence) {
-	this.end = end;
-	this.active = false;
-	this.permanence = permanence || 0.2;
-};
+
 
 
 // --------------------------

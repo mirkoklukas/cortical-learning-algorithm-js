@@ -30,8 +30,8 @@ def create_synapse_matrix(numCols, numBits, numSyns):
 
 if __name__ == '__main__':
 
-    if len(sys.argv) < 4:
-        print "Usage: ...numCols, numBits, numSyns"
+    # if len(sys.argv) < 4:
+        # print "Usage: ...numCols, numBits, numSyns"
 
     numCols = int(sys.argv[1])
     numBits = int(sys.argv[2])
@@ -50,11 +50,11 @@ if __name__ == '__main__':
         with open(output_filename,"w") as output_file:
             # output_file.write("connections = " + json.dumps(connections,indent = 2) + ";")
             # output_file.write("centers = " + json.dumps(centers,indent = 2) + ";")
-            output_file.write( "var desiredLocalActivity = " + str(10) + ";\n")
-            output_file.write( "var minOverlap = " + str(10) + ";\n")
+            output_file.write( "var minOverlap = " + str(5) + ";\n")
             output_file.write( "var numCols = " + str(numCols) + ";\n")
             output_file.write( "var numBits = " + str(numBits) + ";\n")
             output_file.write( "var numSyns = " + str(numSyns) + ";\n")
+            output_file.write( "var desiredLocalActivity = numSyns*" + str(0.2) + ";\n")
             output_file.write( "var potentialSynapses = [ \n")
             output_file.write( ", \n".join(map(str, potentialSynapses)) )
             output_file.write( "\n];")

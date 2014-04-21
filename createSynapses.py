@@ -13,25 +13,25 @@ def create_synapse_matrix(numCols, numBits, numSyns):
 	distrib = rv_discrete(values=(range(numBits), probabilities))  
 
 	potentialSynapses = []
+	permanenceValues = []
 	centers = []
 
 	for y in range(numCols):
 		L = distrib.rvs(size=numSyns).tolist()
 
 		centers.append(L[0])
-		potentialSynapses.append([ int(x in L) for x in range(numBits)])
+		
+		potentialSynapses.append([ (1 if (x in L) else 0) for x in range(numBits)])
+		permanenceValues.append([ (0.2 if (x in L) else 0) for x in range(numBits)])
 
-	# matrix = [ distrib.rvs(size=numSyns).tolist() for x in range(numCols)]  
-
-
-	return (potentialSynapses, centers)
+	return (potentialSynapses, permanenceValues, centers)
 
 
 
 if __name__ == '__main__':
 
     if len(sys.argv) < 4:
-        print "Usage: ..."
+        print "Usage: ...numCols, numBits, numSyns"
 
     numCols = int(sys.argv[1])
     numBits = int(sys.argv[2])
@@ -43,7 +43,7 @@ if __name__ == '__main__':
     else:
         output_filename = None
 
-    potentialSynapses, centers = create_synapse_matrix(numCols, numBits, numSyns);
+    potentialSynapses, permanenceValues, centers = create_synapse_matrix(numCols, numBits, numSyns);
 
     #If we defined an output filename, write the results to it, otherwise just print them to stdout
     if output_filename:

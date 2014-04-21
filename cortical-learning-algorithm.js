@@ -9,7 +9,7 @@ if(typeof Array.sortBy !== 'function') {
 var SpatialPooler = function (minOverlap, desiredLocalActivity) {
 	this.columns = [];
 	this.minOverlap = minOverlap || 10;
-	thisconnectedPerm = 0.2;
+	this.connectedPerm = 0.2;
 	this.desiredLocalActivity = desiredLocalActivity || 10;
 };
 
@@ -33,13 +33,14 @@ SpatialPooler.prototype.getSparseRepresentation = function (input, columns, minO
 	// 
 	var kthOverlapValue = function (columns, k) {
 		var count = 0;
-		columns.sortBy("overlap");
-		for (int i = 1, max = columns.length; i < max; i++) {
-			if(columns[i-1].overlap !== columns[i].overlap) { 
-				count < k ? count += 1 : break;
+		this.columns.sortBy("overlap");
+		for (var i = 1, max = this.columns.length; i < max; i++) {
+			if(this.columns[i-1].overlap !== this.columns[i].overlap) { 
+				if(count < k) count += 1;
+				else break;
 			}
 		}
-		return columns[k-1].overlap;
+		return this.columns[k-1].overlap;
 	}
 	
 	// 
@@ -60,14 +61,16 @@ SpatialPooler.prototype.getSparseRepresentation = function (input, columns, minO
 	// 
 	return this.columns.map(function (column) {
 		column.computeOverlap(input)
-			.boost(minOverlap);
+			.boost(minOverlap)
 			.filter(satOverlapBenchmark(kthOverlapValue(columns, desiredLocalActivity)))
 			.map(select("id"));
 
 	})
 };
 
+SpatialPooler.prototype.learn = function () {
 
+};
 
 
 var verticalSyapse = function (end, permanence) {
@@ -98,7 +101,7 @@ Column.prototype.computeOverlap = function (input) {
 	return this;
 };
 
-Columns.prototype.boost = function (minOverlap) {
+Column.prototype.boost = function (minOverlap) {
 	// 
 	var boostValue = this.boostValue || 1.0;
 	// 

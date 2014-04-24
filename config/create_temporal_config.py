@@ -13,17 +13,38 @@ def create_temporal_config(numCols, numCells, numSegs, numSyns):
     distrib = rv_discrete(values=(range(numCols*numCells), probabilities))  
 
 
-    columns = dict([ (x, { "cells": [y for y in range(numCells)] } )  for x in range(numCols)])
-    cells = dict([ (c, { "state": 0, "feedingSegs": [ (s + c*numSegs) for s in range(numSegs) ], "listeningSegs":[]  }) for c in range(numCols*numCells) ])
-    segs = dict([ (s, { "feedingCells": distrib.rvs(size=numSyns).tolist(), "listeningCell": None }) for s in range(numCells*numSegs)])
+    columns = dict([ (x, { 
+        "id": x, 
+        "cells": [y + x*numCells for y in range(numCells)] 
+    })  for x in range(numCols)])
+    
+    cells = dict([ (c, { 
+        "id": c, 
+        "column": None, 
+        "state": 0, 
+        "feedingSegs": [ (s + c*numSegs) for s in range(numSegs) ], 
+        "listeningSegs": []  
+    }) for c in range(numCols*numCells) ])
 
-    for s in range(numCells*numSegs):
+    segs = dict([ (s, { 
+        "id": s, 
+        "feedingCells": distrib.rvs(size=numSyns).tolist(), 
+        "listeningCell": None 
+    }) for s in range(numCols*numCells*numSegs)])
+
+
+    for s in segs:
         for c in segs[s]["feedingCells"]:
-            cells[c]["listeningSegs"].append(s)
+            cells[c]["listeningSegs"].append(int(s))
 
-    for c in range(numCells):
+    for c in cells:
         for s in cells[c]["feedingSegs"]:
-            segs[s]["listeningCell"] = c;
+            segs[s]["listeningCell"] = int(c)
+
+    for col in columns:
+        for cell in columns[col]["cells"]:
+            cells[cell]["column"] = int(col)
+
 
     config = {
         "numCols": numCols,
@@ -31,8 +52,8 @@ def create_temporal_config(numCols, numCells, numSegs, numSyns):
         "numSegs": numSegs,
         "numSyns": numSyns,
         "columns": columns,
-        "cells": cells,
-        "segs": segs
+        "segs": segs,
+        "cells": cells
     }
 
 

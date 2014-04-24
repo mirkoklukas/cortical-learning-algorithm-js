@@ -12,10 +12,11 @@ def create_spatial_config(numCols, numBits, numSyns):
     distrib = rv_discrete(values=(range(numBits), probabilities))  
 
 
-    inputCells = dict([ (c, {"listeningSegs": []}) for c in range(numBits)])
+    inputCells = dict([ (c, {"id": c, "listeningSegs": []}) for c in range(numBits)])
 
 
     columnSegs = dict([ (s, {
+        "id": s,
         "feedingCells": distrib.rvs(size=numSyns).tolist(), 
         "center": None, 
         "boost": 1.0,
@@ -26,7 +27,7 @@ def create_spatial_config(numCols, numBits, numSyns):
         }
         }) for s in range(numCols)])
 
-    synapses = dict([ (s, dict([ (b, {"permanence": 0, "active": 0})  for b in range(numBits) ])) for s in columnSegs ])
+    synapses = dict([ (s, dict([ (b, {"permanence": 0, "active": 0 })  for b in range(numBits) ])) for s in columnSegs ])
 
     for s in columnSegs:
         columnSegs[s]["center"] = columnSegs[s]["feedingCells"][0] 

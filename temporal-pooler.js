@@ -1,14 +1,12 @@
 
 
-
-
 var SimpleSet = function () {
 	var hash = {};
 	var data = [];
 
 	this.add = function (key) {
 		hash[key] = true;
-		data.push(el);
+		data.push(key);
 	};
 	this.map = function(_) {
 		var args = [].slice.call(arguments)
@@ -34,16 +32,19 @@ var SimpleSet = function () {
 
 ;(function (exports) {
 
-var TemporalPooler = function () { 
+var TemporalPooler = function (activationThreshold) { 
 
 	var t = 0;
 	var history = [];
 
-	var activationThreshold;
+	var numCols,
+		numCells,
+		numSegs,
+		activationThreshold = activationThreshold,
+		columns = {},
+		cells = {},
+		segments = {};
 
-	var predictiveCells;
-
-	var cells = {};
 
 
 	var state = {
@@ -53,31 +54,21 @@ var TemporalPooler = function () {
 	};
 	Object.freeze(state);
 
+	this.getHistory = function () {
+		return history;
+	}
 
-	// var Cell = function (columnId) {
-	// 	this.id;
-	// 	this.column = {};
-	// 	this.listeningSegs = [];
-	// 	this.feedingSegs = [];
-	// 	this.state;
-	// };
-
-	// var Column = function () {
-	// 	this.id;
-	// 	this.cells = [];
-	// };
-
-	// var Segment = function () {
-	// 	this.id;
-	// 	this.getFeedingCells = [];
-	// 	this.listeningCell = {};
-	// 	this.activationCount = 0;
-	// };
-
-	var columns = {};
-	var cells = {};
-	var segements = {};
-	
+	this.getData = function () {
+		return {
+			"columns": columns,
+			"cells": cells,
+			"segments": segments,
+			"numCols": numCols,
+			"numCells": numCells,
+			"numSegs": numSegs,
+			"numSyns": numSyns
+		};
+	}
 
 	var getState = function (cell) {
 		return cells[cell].state;
@@ -87,16 +78,22 @@ var TemporalPooler = function () {
 		return cells[cell];
 	};
 	var getCells = function (column) {
-		return column !== undefined ? column.cells : cells.map(function (cell) { return cell.id; }) ;
+		var result = [];
+		if(column !== undefined) {
+			result = columns[column].cells;
+		} else {	
+			for( id in cells) result.push(id);
+		}
+		return result;
 	};
-	var getColumns = function () {
-		return columns.map(function (column) { return column.id; }) ;
+	var getColumn = function (cell) {
+		return  cells[cell]["column"];
 	};
 	var getListeningCell = function (seg) {
-		return segments.listeningCell;
+		return segments[seg].listeningCell;
 	};
 	var getFeedingCells = function (seg) {
-		return segments.feedingCells;
+		return segments[seg].feedingCells;
 	};
 	var getListeningSegs = function (cell) {
 		return cells[cell].listeningSegs;
@@ -111,33 +108,36 @@ var TemporalPooler = function () {
 	var computeActiveCells = function (activeColumnIds) {
 		var columnBeenPredicted = false,
 			activeCells = [];
-
 		activeColumnIds.forEach(function(column) {
 			columnBeenPredicted = false;
 
+
 			getCells(column).forEach(function (cell) {
 				if( getState(cell) === state["predictive"] ) {
+
 					columnBeenPredicted = true;
 					activeCells.push(cell);
 				}
 			});
 
 			if(columnBeenPredicted === false) {
-				activeCells.concat(getCells(column));
+				activeCells = activeCells.concat(getCells(column));
 			}	
 		});
 
 		return activeCells;
 	}
+	this.computeActiveCells = computeActiveCells;
 
-	var computePredictions = function (cells) {
+
+	var computePredictions = function (activeCells) {
 		var activationCount = {},
 			columns = new SimpleSet(),
 			cells = new SimpleSet();	
 
 		// Set the activation count
-		cells.forEach(function (cell) {
-			getListeningSegs(cell).forEach(function () {
+		activeCells.forEach(function (cell) {
+			getListeningSegs(cell).forEach(function (seg) {
 				// if ```undefined``` initialize with ```zero```
 				activationCount[seg] = activationCount[seg] || 0;
 				activationCount[seg] += 1;
@@ -146,7 +146,7 @@ var TemporalPooler = function () {
 
 		for (seg in activationCount) {
 			if(activationCount[seg] >= activationThreshold) {
-				columns.add(getColumn(getListeningCell(seg)));
+				columns.add( getColumn(getListeningCell(seg)) );
 				cells.add(getListeningCell(seg));
 			} 
 			
@@ -160,7 +160,9 @@ var TemporalPooler = function () {
 		};
 	}
 
-	var processActiveBits = function (activeBits) {
+	this.computePredictions = computePredictions;
+
+	var processInput= function (activeBits) {
 		var activeBits = activeBits,
 			activeCells = computeActiveCells(activeBits),
 			predictions = computePredictions(activeCells),
@@ -186,12 +188,19 @@ var TemporalPooler = function () {
 		return activeBits.concat(predictedColumns);
 	};
 
-	this.initialize = function(columns, cells, segments) {
-		columns = columns;
-		cells = cells;
-		segments = segments;
+	this.initialize = function(config) {
+
+		columns  = config.columns;
+		cells 	 = config.cells;
+		segments = config.segs;
+		numCols  = config.numCols;
+		numCells = config.numCells;
+		numSegs  = config.numSegs;
+		numSyns  = config.numSyns;
+
+ 
 	};
-	this.processActiveBits = processActiveBits;
+	this.processInput = processInput;
 
 }
 

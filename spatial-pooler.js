@@ -1,4 +1,8 @@
 
+
+
+
+
 // --------------------------
 // Some Helper... yeah shouldn't touch the Array.prototype....
 // --------------------------
@@ -19,11 +23,19 @@ if(typeof Array.sum !== 'function') {
 // 'select("key")' is a function that can be handed to Array.map...
 var select = function(key) {
 	var args = [].slice.apply(arguments);
-	return function (obj) {
-		return args.length === 1 ? obj[args[0]]: args.map(function (key) { 
-			return obj[key]; 
-		});
-	};
+	if(args.length === 1) { 
+		selectMyKeys = function (obj) {
+			return  obj[args[0]];
+		};
+	}
+	else {
+		selectMyKeys = function (obj) {  
+			return args.map(function (key) { 
+						return obj[key]; 
+			});
+		};
+	}
+	return selectMyKeys;
 };
 
 var swap= function (a, i, j) {
@@ -34,7 +46,11 @@ var swap= function (a, i, j) {
 }
 
 var firstKLargest = function (a, access, k) {
-	var max = 0, i = 0, j = 0, temp = 0;
+	// 
+	if(a.length < k) return a;
+
+	// 
+	var max = 0, i = 0, j = 0, temp = 0, result = [];
 
 	for (i = 0; i < k; i++) {
 		max = access(a[i]);
@@ -68,13 +84,11 @@ var getKeyForMaxProperty = function (dict, property) {
 	// into a "sparse" representation
 	// --------------------------
 	var SpatialPooler = function (minOverlap, desiredLocalActivity) {
-		this.columns = [];
 		this.minOverlap = minOverlap || 10;
 		this.connectedPerm = 0.2;
 		this.desiredLocalActivity = desiredLocalActivity;
-		this.input;
-		this.sparseInput;
-		this.synMatrix;
+
+		this.history = [];
 
 		this.numCols;
         this.numBits;
@@ -82,7 +96,7 @@ var getKeyForMaxProperty = function (dict, property) {
 		this.segments = {};
 		this.cells = {};
 		this.synapses = {};
-		this.history = [];
+
 	};
 
 
@@ -103,11 +117,10 @@ var getKeyForMaxProperty = function (dict, property) {
 	};
 
 	SpatialPooler.prototype.initialize = function (config) {
-		this.numCols = config["numCols"];
-		this.numBits = config["numBits"];
+		this.numCols = config["numSegs"];
+		this.numBits = config["numCells"];
 		this.numSyns = config["numSyns"];
 		this.segments = config["segs"];
-
 
 		this.cells = config["cells"]
 		this.synapses = config["synapses"];
@@ -118,25 +131,29 @@ var getKeyForMaxProperty = function (dict, property) {
 	SpatialPooler.prototype.getSparseRepresentation = function (activeCells) {
 		// 
 		var overlap = this.computeOverlap(activeCells),
-			boosted = this.boost(overlap, minOverlap),
-			filtered = this.filter(boosted, this.desiredLocalActivity);
+			boosted = this.boost(minOverlap, overlap),
+			filtered = this.filter(boosted, this.desiredLocalActivity),
+			output = filtered.map(function (x) {
+				return parseInt(select("id")(x));
+			});
 
 		this.history.push({
 			"input": activeCells,
 			"overlap": boosted,
-			"output": filtered
+			"output": output
 		});
 
-		return filtered;
+		return output;
 	};
 
-	SpatialPooler.prototype.computeOverlap = function (activeCells) {
+	SpatialPooler.prototype.computeOverlap = function (activeCells, t) {
 		// 
 		var dict = {};
 
 		var that = this;
 		activeCells.forEach(function (cell) {
 			that.getListeningSegments(cell).forEach(function (seg) {
+				that.synapses[seg][cell]["active"] = 1;
 				if(that.synapses[seg][cell]["permanence"] >= 0.2) {
 					dict[seg] = dict[seg] || 0;
 					dict[seg] += 1;
@@ -147,7 +164,7 @@ var getKeyForMaxProperty = function (dict, property) {
 		return dict;
 	};
 
-	SpatialPooler.prototype.boost = function (overlapDict, minOverlap) {
+	SpatialPooler.prototype.boost = function (minOverlap, overlapDict) {
 		// 
 		var boosted = [];
 		for(seg in overlapDict) {
@@ -161,42 +178,36 @@ var getKeyForMaxProperty = function (dict, property) {
 
 
 	SpatialPooler.prototype.filter = function (overlap, k) {
-		return firstKLargest(overlap, function(obj) { 
-			return obj["overlap"]; 
-		}, k);
+		return firstKLargest(overlap, select("overlap"), k);
 	}
 
 	// --------------------------
 	// Learning
 	// --------------------------
 	SpatialPooler.prototype.learn = function () {
-		var permanenceInc =  0.01,
-		    permanenceDec =  0.01,
+		var permanenceInc =  0.05,
+		    permanenceDec =  0.05,
 		    input = this.history[this.history.length - 1]["input"],
 		    output = this.history[this.history.length - 1]["output"],
 		    overlap = this.history[this.history.length - 1]["overlap"];
 		// 
 		var that = this;
 
+
 		output.forEach(function (seg) {
-			var seg = seg.id
 
 			that.getFeedingCells(seg).forEach(function (cell) {
-				if( that.synapses[seg][cell]["permanence"] >= 0.2 ) { 
+				if( that.synapses[seg][cell]["active"] === 1 ) { 
+
 					that.synapses[seg][cell]["permanence"] += permanenceInc;
 					that.synapses[seg][cell]["permanence"] = Math.min(1.0, that.synapses[seg][cell]["permanence"] );
 				} else {
+
 					that.synapses[seg][cell]["permanence"] -= permanenceDec;
 					that.synapses[seg][cell]["permanence"] = Math.max(0.0, that.synapses[seg][cell]["permanence"] );
 				}
 			})
 		})
-
-		// Todo: find a better way to do this!!!!
-		this.columns.forEach(function (column) {
-			column.history["overlap"].push( column.overlap > this.minOverlap ? 1 : 0);
-			column.history["activity"].push( that.sparseInput.indexOf(column.id) > -1 ? 1 : 0 );
-		});
 
 		for ( var seg in  this.segments) {
 			this.segments[seg]["history"]["overlap"].push( 0 );
@@ -227,9 +238,14 @@ var getKeyForMaxProperty = function (dict, property) {
 					that.synapses[seg][cell]["permanence"] += 0.1 * that.connectedPerm;
 				})
 			}
-
 		}
 
+
+		for( var s in this.synapses) {
+			for( var c in this.synapses[s]) {
+				 this.synapses[s][c]["active"] = 0;
+			}
+		}
 	};
 
 	exports.SpatialPooler = SpatialPooler;

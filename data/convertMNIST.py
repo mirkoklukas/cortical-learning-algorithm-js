@@ -48,7 +48,7 @@ if __name__ == '__main__':
     images, labels = read([0,1], 'training')
     data = "var input = ["
     pics = []
-    for j in range(20):
+    for j in range(100):
         imgstr = ""
         rows = [];
         for i in range(len(images[j]) ):

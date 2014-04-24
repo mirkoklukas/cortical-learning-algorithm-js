@@ -34,6 +34,8 @@ var SimpleSet = function () {
 
 ;(function (exports) {
 
+var TemporalPooler = function () { 
+
 	var t = 0;
 	var history = [];
 
@@ -184,12 +186,16 @@ var SimpleSet = function () {
 		return activeBits.concat(predictedColumns);
 	};
 
+	this.initialize = function(columns, cells, segments) {
+		columns = columns;
+		cells = cells;
+		segments = segments;
+	};
+	this.processActiveBits = processActiveBits;
 
+}
 
-
-
-
-
+exports.TemporalPooler = TemporalPooler;
 
 }(this));
 

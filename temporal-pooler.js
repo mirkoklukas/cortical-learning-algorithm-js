@@ -57,7 +57,7 @@ var TemporalPooler = function (activationThreshold) {
 	this.getHistory = function () {
 		return history;
 	}
-
+	
 	this.getData = function () {
 		return {
 			"columns": columns,

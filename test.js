@@ -31,29 +31,41 @@ temporalPooler.initialize(configTemporal);
 
 var drawPool = function (position, size, tempPool, stage) {
 	var history = tempPool.getHistory(),
-		data = temporalPooler.getData(),
+		numCols = temporalPooler.getData().numCols,
+		numCells = temporalPooler.getData().numCells,
 		hist0 = history[history.length - 1],
-		input0,
-		activeCells0,
-		predictedCells0,
-		predictedColumns0;
+		input0 = hist0.activeBits,
+		activeCells0 = hist0.activeCells,
+		predictedCells0 = hist0.predictedCells,
+		predictedColumns0 = hist0.predictedColumns;
+
 
 	var x, y, color;
 	input0.forEach(function (id) {
 		color = "rgba(0, 0, 0, 1.0)";
 		stage.rect(
-			[ position[0] + id*(size[0] + 1), position[1]],
+			[ position[0] + id*(size[0] + 1), position[1] + 50 ],
 			[size[0], size[1]],
 			color
 		);
 	});
 
 	activeCells0.forEach(function (id) {
-
+		color = "rgba(255, 0, 255, 0.5)";
+		stage.rect(
+			[ position[0] + parseInt(id/numCells)*(size[0] + 1), position[1] + id%numCells*(size[1] + 1) ],
+			[size[0], size[1]],
+			color
+		);
 	});
 
 	predictedCells0.forEach(function (id) {
-
+		color = "rgba(5, 225, 255, 0.5)";
+		stage.rect(
+			[ position[0] + parseInt(id/numCells)*(size[0] + 1), position[1] + id%numCells*(size[1] + 1) ],
+			[size[0], size[1]],
+			color
+		);
 	});
 
 }
@@ -90,9 +102,9 @@ setInterval(function () {
 
 	stage.clear();
 	
-	draw(spatialPooler.segments,[0,80], [5,30], "rgba(0,0,0,"+ 0.1+")", stage)
+	// draw(spatialPooler.segments,[0,80], [5,30], "rgba(0,0,0,"+ 0.1+")", stage)
 	// draw(prediction,[0,200],[2,10], "rgba(255,255,100,"+ 1.0+")", stage)
-	draw(sparseInput,[0,120], [5,10], "rgba(255,0,255,"+ 1.0+")", stage)
+	// draw(sparseInput,[0,120], [5,10], "rgba(255,0,255,"+ 1.0+")", stage)
 
 
 	activeCells = temporalPooler.computeActiveCells(sparseInput);
@@ -102,59 +114,7 @@ setInterval(function () {
 	processedInput = temporalPooler.processInput(sparseInput);
 	// console.log(activeCells);
 
-	draw(predictedColumns,[0,60],[5,10], "rgba(0,255,255,"+ 1.0+")", stage)
-	draw(sparseInput,[0,60], [5,10], "rgba(255,0,255,"+ 1.0+")", stage)
-
-	var x,y;
-	for( x in temporalPooler.getData().columns) {
-		// debugger
-		x = parseInt(x)
-		temporalPooler.getData().columns[x].cells.forEach(function (y) {
-
-			y = parseInt(y)
-			var color = "rgba(255,0,255," + 0.5 + ")";
-			if( activeCells.indexOf(parseInt(y)) > -1) { 
-				stage.rect(
-					[ x*6 , y%5*6 + 80],
-					[5, 5],
-					color
-				);
-			}
-
-			color = "rgba(0,255,255," + 0.5 + ")";
-			if( predictedCells.indexOf(parseInt(y)) > -1) { 
-				stage.rect(
-					[ x*6 , y%5*6 + 80],
-					[5, 5],
-					color
-				);
-			}
-		})
-		 
-	}
-
-	// var x, y;
-	// for( var s in spatialPooler.synapses) {
-	// 	x = parseInt(s);
-	// 	for( var c in spatialPooler.synapses[s]) {
-	// 		y = parseInt(c);
-	// 		var color = "rgba(255,0,255," + spatialPooler.synapses[s][c]["permanence"]*1.4 + ")";
-	// 		stage.rect(
-	// 			[ x*1 , y*1 + 100],
-	// 			[1, 1],
-	// 			color
-	// 		);
-
-	// 	}
-	// }
-
-
-
-	inp.forEach(function (val, i) {
-		var col =  (val > 0 )? "rgba(0,0,255, " + val/255 + ")": "rgba(255,100,255,0.2)";
-		stage.rect([(i%28)*3 + 0,parseInt(i/28) * 3 + 200],[2,2], col);
-	}) 
-
+	drawPool([10,10], [5,5], temporalPooler, stage)
 
 
 

@@ -46,7 +46,7 @@ def read(digits, dataset = "training", path = "."):
 if __name__ == '__main__':
 
     images, labels = read([0,1], 'training')
-    data = "var input = ["
+    data = "var inputs = ["
     pics = []
     for j in range(100):
         imgstr = ""

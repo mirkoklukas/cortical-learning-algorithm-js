@@ -116,7 +116,7 @@ var getKeyForMaxProperty = function (dict, property) {
 		return this.synapses[seg][cell]["permanence"] >= 0.2;
 	};
 
-	SpatialPooler.prototype.initialize = function (config) {
+	SpatialPooler.prototype.configure = function (config) {
 		this.numCols = config["numSegs"];
 		this.numBits = config["numCells"];
 		this.numSyns = config["numSyns"];

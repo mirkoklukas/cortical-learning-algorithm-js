@@ -54,11 +54,11 @@ var TemporalPooler = function (activationThreshold) {
 	};
 	Object.freeze(state);
 
-	this.getHistory = function () {
+	var getHistory = this.getHistory = function () {
 		return history;
 	}
 	
-	this.getData = function () {
+	var getData = this.getData = function () {
 		return {
 			"columns": columns,
 			"cells": cells,
@@ -76,6 +76,9 @@ var TemporalPooler = function (activationThreshold) {
 	var setState = function (cell, state) {
 		cells[cell].state = state;
 		return cells[cell];
+	};
+	var isPredicted = function (cell) {
+		return getState(cell) === state["predictive"];
 	};
 	var getCells = function (column) {
 		var result = [];
@@ -107,14 +110,15 @@ var TemporalPooler = function (activationThreshold) {
 	// returns a list of active cell id's
 	var computeActiveCells = function (activeColumnIds) {
 		var columnBeenPredicted = false,
+			learnigCellChosen =false, 
 			activeCells = [];
+
 		activeColumnIds.forEach(function(column) {
 			columnBeenPredicted = false;
-
+			learnigCellChosen = false;
 
 			getCells(column).forEach(function (cell) {
-				if( getState(cell) === state["predictive"] ) {
-
+				if(isPredicted(cell)) {
 					columnBeenPredicted = true;
 					activeCells.push(cell);
 				}
@@ -148,8 +152,7 @@ var TemporalPooler = function (activationThreshold) {
 			if(activationCount[seg] >= activationThreshold) {
 				columns.add( getColumn(getListeningCell(seg)) );
 				cells.add(getListeningCell(seg));
-			} 
-			
+			} 			
 		}
 
 		return {
@@ -176,6 +179,7 @@ var TemporalPooler = function (activationThreshold) {
 			"predictedColumns": predictedColumns.slice()
 		});
 
+		// Todo: this screams for a better solution
 		// clear the cell state
 		getCells().forEach(function (cell) {
 			setState(cell, 0);
@@ -188,8 +192,7 @@ var TemporalPooler = function (activationThreshold) {
 		return activeBits.concat(predictedColumns);
 	};
 
-	this.initialize = function(config) {
-
+	this.configure = function(config) {
 		columns  = config.columns;
 		cells 	 = config.cells;
 		segments = config.segs;
@@ -197,9 +200,9 @@ var TemporalPooler = function (activationThreshold) {
 		numCells = config.numCells;
 		numSegs  = config.numSegs;
 		numSyns  = config.numSyns;
-
- 
+		return this;
 	};
+	
 	this.processInput = processInput;
 
 }

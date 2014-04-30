@@ -111,22 +111,38 @@ var TemporalPooler = function (activationThreshold) {
 	var computeActiveCells = function (activeColumnIds) {
 		var columnBeenPredicted = false,
 			learnigCellChosen =false, 
-			activeCells = [];
+			activeCells = [],
+			updates = [];
 
 		activeColumnIds.forEach(function(column) {
 			columnBeenPredicted = false;
 			learnigCellChosen = false;
 
 			getCells(column).forEach(function (cell) {
-				if(isPredicted(cell)) {
+				if(isPredicted(cell) && isSequenceSegment(getPredictingSegment(cell))) {
+
 					columnBeenPredicted = true;
 					activeCells.push(cell);
+					activateCell(cell);
+					if (segmentActive(getPredictingSegment(cell), "learnState")) {
+						learnigCellChosen = true;
+						activateLearning(cell);
+					}
 				}
 			});
 
 			if(columnBeenPredicted === false) {
 				activeCells = activeCells.concat(getCells(column));
 			}	
+
+			if (learnigCellChosen === false) {
+				var bestCell = getBestMatchingCell(column),
+					bestSegment = getBestMatchingSegment(cell);
+
+				activateLearning(bestCell);
+				updates.push(bestSegment);
+			}
+
 		});
 
 		return activeCells;

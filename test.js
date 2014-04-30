@@ -93,7 +93,7 @@ var draw = function (segments, position, size, color,  stage) {
 
 
 setInterval(function () {
-	inp = input.pop();
+	inp = inputs.pop();
 	sparseInput = spatialPooler.getSparseRepresentation(getActiveBits(inp));
 	spatialPooler.learn()
 	

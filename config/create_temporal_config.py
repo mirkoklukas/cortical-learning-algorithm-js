@@ -22,12 +22,14 @@ def create_temporal_config(numCols, numCells, numSegs, numSyns):
         "id": c, 
         "column": None, 
         "state": 0, 
+        "learning": False, 
         "feedingSegs": [ (s + c*numSegs) for s in range(numSegs) ], 
         "listeningSegs": []  
     }) for c in range(numCols*numCells) ])
 
     segs = dict([ (s, { 
         "id": s, 
+        "sequential": False,
         "feedingCells": distrib.rvs(size=numSyns).tolist(), 
         "listeningCell": None 
     }) for s in range(numCols*numCells*numSegs)])

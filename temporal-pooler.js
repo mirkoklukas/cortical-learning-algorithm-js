@@ -104,6 +104,30 @@ var TemporalPooler = function (activationThreshold) {
 	var getFeedingSegs = function (cell) {
 		return cells[cell].feedingSegs;
 	};
+	var getPredictingSegment = function (cell) {
+		if(isPredicted(cell)) {
+			return cells[cells]["predictingSegement"];
+		} else {
+			throw "Trying to access the predicting segment " + 
+				"of a cell that is not in predictive state...";
+		}
+	};
+	var setPredictingSegment = function (cell, seg) {
+		cells[cells]["predictingSegement"] = seg;
+	};
+	var getBestMatchingCell = function (column) {
+		getCells(column).forEach(function (cell) {
+			getFeedingSegs(cell).forEach(function (seg) {
+				
+			});
+		});
+	};
+	var getBestMatchingSegment = function (cell) {
+
+	};
+	var isSequenceSegment = function (seg) {
+		return segments[seg]["sequential"];
+	};
 
 
 	// takes a list of column id's, and
@@ -123,10 +147,13 @@ var TemporalPooler = function (activationThreshold) {
 
 					columnBeenPredicted = true;
 					activeCells.push(cell);
-					activateCell(cell);
+					// activateCell(cell);
+					cells[cell]["state"] = 1;
+
 					if (segmentActive(getPredictingSegment(cell), "learnState")) {
 						learnigCellChosen = true;
-						activateLearning(cell);
+						cells[cell]["learning"] = true;
+						// activateLearning(cell);
 					}
 				}
 			});
@@ -137,9 +164,10 @@ var TemporalPooler = function (activationThreshold) {
 
 			if (learnigCellChosen === false) {
 				var bestCell = getBestMatchingCell(column),
-					bestSegment = getBestMatchingSegment(cell);
+					bestSegment = getBestMatchingSegment(bestCell);
 
-				activateLearning(bestCell);
+				// activateLearning(bestCell);
+				cells[bestCell]["learning"] = true;
 				updates.push(bestSegment);
 			}
 
@@ -153,7 +181,7 @@ var TemporalPooler = function (activationThreshold) {
 	var computePredictions = function (activeCells) {
 		var activationCount = {},
 			columns = new SimpleSet(),
-			cells = new SimpleSet();	
+			cells = new SimpleSet();
 
 		// Set the activation count
 		activeCells.forEach(function (cell) {
@@ -168,6 +196,8 @@ var TemporalPooler = function (activationThreshold) {
 			if(activationCount[seg] >= activationThreshold) {
 				columns.add( getColumn(getListeningCell(seg)) );
 				cells.add(getListeningCell(seg));
+				setPredictingSegment(cell, seg);
+				// Todo: Reward the synapses involved?
 			} 			
 		}
 
@@ -187,7 +217,7 @@ var TemporalPooler = function (activationThreshold) {
 			predictions = computePredictions(activeCells),
 			predictedColumns = predictions["columns"],
 			predictedCells = predictions["cells"];
-
+			
 		history.push({
 			"activeBits": activeBits.slice(),
 			"activeCells": activeCells.slice(),

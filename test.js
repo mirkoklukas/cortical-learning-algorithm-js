@@ -9,18 +9,25 @@ var getActiveBits = function (input) {
 	return active;
 }
 
+// convert 2-dimensional image data into 
+// an 1-dimensional vector (array)  
+// inputs = inputs.map(function(input) {
+// 	return [].concat.apply([], input);
+// });
+
+inputs = [];
+for (var i=0; i<1000; i++) {
+	inputs.push([1,1,1,1,1,0,0,0,0,0]);
+	inputs.push([1,1,1,1,1,0,0,0,0,0]);
+	inputs.push([0,0,0,0,0,1,1,1,1,1]);
+}
 
 
-
-inputs = inputs.map(function(input) {
-	return [].concat.apply([], input);
-});
-
-var minOverlap = 5,
-	desiredLocalActivity = 20,
-	activationThreshold  = 5,
-	spatialPooler  = new SpatialPooler(minOverlap, desiredLocalActivity).configure(configSpatial),
-	temporalPooler = new TemporalPooler(activationThreshold).configure(configTemporal),
+var minOverlap = 4,
+	desiredLocalActivity = 9,
+	activationThreshold  = 8,
+	spatialPooler  = new SpatialPooler(minOverlap, desiredLocalActivity).configure(config.spatial),
+	temporalPooler = new TemporalPooler(activationThreshold).configure(config.temporal),
 	input = [],
 	sparseInput = [],
 	prediction = [];
@@ -41,18 +48,7 @@ var drawPool = function (position, size, tempPool, stage) {
 	input0.forEach(function (id) {
 		color = "rgba(0, 0, 0, 1.0)";
 		x = position[0] + id*(size[0] + 1);
-		y = position[1] + 50;
-		stage.rect(
-			[x, y],
-			[size[0], size[1]],
-			color
-		);
-	});
-
-	activeCells0.forEach(function (id) {
-		color = "rgba(255, 0, 255, 0.5)";
-		x = position[0] + parseInt(id/numCells)*(size[0] + 1);
-		y = position[1] + id%numCells*(size[1] + 1);
+		y = position[1] + numCells*(size[1]+1);
 		stage.rect(
 			[x, y],
 			[size[0], size[1]],
@@ -70,6 +66,39 @@ var drawPool = function (position, size, tempPool, stage) {
 			color
 		);
 	});
+
+	activeCells0.forEach(function (id) {
+		color = "rgba(255, 0, 255, 0.7)";
+		x = position[0] + parseInt(id/numCells)*(size[0] + 1);
+		y = position[1] + id%numCells*(size[1] + 1);
+		stage.rect(
+			[x, y],
+			[size[0], size[1]],
+			color
+		);
+	});
+
+	predictedColumns0.forEach(function (id) {
+		color = "rgba(0, 0, 0, 1.0)";
+		x = position[0] + id*(size[0] + 1);
+		y = position[1] - (size[1]+1);
+		stage.rect(
+			[x, y],
+			[size[0], size[1]],
+			color
+		);
+	});
+	input0.forEach(function (id) {
+		color = "rgba(0, 0, 0, 1.0)";
+		x = position[0] + id*(size[0] + 1);
+		y = position[1] - (size[1]+1);
+		stage.rect(
+			[x, y],
+			[size[0], size[1]],
+			color
+		);
+	});
+	
 
 }
 
@@ -93,8 +122,8 @@ var draw = function (segments, position, size, color,  stage) {
 
 
 setInterval(function () {
-	inp = inputs.pop();
-	sparseInput = spatialPooler.getSparseRepresentation(getActiveBits(inp));
+	input = inputs.pop();
+	sparseInput = spatialPooler.getSparseRepresentation(getActiveBits(input));
 	spatialPooler.learn()
 	
 

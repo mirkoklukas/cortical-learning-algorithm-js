@@ -5,7 +5,7 @@ var SimpleSet = function () {
 	var data = [];
 
 	this.add = function (key) {
-		hash[key] = true;
+		hash[key] = true;  
 		data.push(key);
 	};
 	this.map = function(_) {
@@ -45,8 +45,6 @@ var TemporalPooler = function (activationThreshold) {
 		cells = {},
 		segments = {};
 
-
-
 	var state = {
 		"inactive": 0,
 		"active": 1,
@@ -56,7 +54,7 @@ var TemporalPooler = function (activationThreshold) {
 
 	var getHistory = this.getHistory = function () {
 		return history;
-	}
+	};
 	
 	var getData = this.getData = function () {
 		return {
@@ -68,17 +66,23 @@ var TemporalPooler = function (activationThreshold) {
 			"numSegs": numSegs,
 			"numSyns": numSyns
 		};
-	}
-
-	var getState = function (cell) {
-		return cells[cell].state;
 	};
-	var setState = function (cell, state) {
-		cells[cell].state = state;
+
+	var getState = function (cell, t) {
+		return cells[cell]["state"][t] === undefined ? 0 : cells[cell]["state"][t];
+	};
+	var setState = function (cell, state, t) {
+		cells[cell]["state"][t] = state;
 		return cells[cell];
 	};
-	var isPredicted = function (cell) {
-		return getState(cell) === state["predictive"];
+	var isActive = function (cell, t) {
+		return cells[cell].state === 1;
+	};
+	var isLearning = function (cell) {
+		return cells[cell].learning === true;
+	};
+	var isPredicted = function (cell, t) {
+		return getState(cell, t) === state["predictive"];
 	};
 	var getCells = function (column) {
 		var result = [];
@@ -104,71 +108,114 @@ var TemporalPooler = function (activationThreshold) {
 	var getFeedingSegs = function (cell) {
 		return cells[cell].feedingSegs;
 	};
-	var getPredictingSegment = function (cell) {
-		if(isPredicted(cell)) {
-			return cells[cells]["predictingSegement"];
+	var isActiveSegment = function (seg, mode, t) {
+		mode = mode === "learningScore" ? "learningScore" : "score";
+		return segments[seg][mode][t] > activationThreshold;
+	};
+	var getPredictingSegment = function (cell, t) {
+		if(isPredicted(cell, t)) {
+			return cells[cell]["predictingSegement"][t] || null;
 		} else {
 			throw "Trying to access the predicting segment " + 
 				"of a cell that is not in predictive state...";
 		}
 	};
-	var setPredictingSegment = function (cell, seg) {
-		cells[cells]["predictingSegement"] = seg;
+	var setPredictingSegment = function (cell, seg, t) {
+		cells[cell]["predictingSegement"][t] = seg;
 	};
-	var getBestMatchingCell = function (column) {
+	// var getScore = function (seg) {
+	// 	var score = 0;
+	// 	getFeedingCells(seg).forEach(function (cell) {
+	// 		if (isActive(cell)) score += 1; 
+	// 	});
+	// 	return score;
+	// }
+	var getScore = function (seg, t) {
+		return segments[seg]["score"][t] || 0;
+	}
+	var setScore = function (seg, t, score) {
+		segments[seg]["score"][t] = score;
+	}
+	var getLearningScore = function (seg, t) {
+		return segments[seg]["learningScore"][t] || 0;
+	}
+	var setLearningScore = function (seg, t, score) {
+		segments[seg]["learningScore"][t] = score;
+	}
+	var getBestMatch = function (column, t) {
+		var maxSeg  = 0,
+			maxCell = 0,
+			idCell  = null,
+			idSeg   = null;
+
 		getCells(column).forEach(function (cell) {
 			getFeedingSegs(cell).forEach(function (seg) {
-				
+				if(getScore(seg, t) >= maxSeg) {
+					idSeg  = seg;
+					maxSeg = getScore(seg, t);
+				}
 			});
-		});
-	};
-	var getBestMatchingSegment = function (cell) {
 
+			if(maxSeg >= maxCell) {
+				maxCell = maxSeg;
+				idCell  = cell;
+			}
+		});
+
+		return [idCell, idSeg];
 	};
-	var isSequenceSegment = function (seg) {
-		return segments[seg]["sequential"];
+
+	var isSequential = function (seg) {
+		return segments[seg]["sequential"] === true;
 	};
 
 
 	// takes a list of column id's, and
 	// returns a list of active cell id's
-	var computeActiveCells = function (activeColumnIds) {
+	var computeActiveCells = function (activeColumnIds, t) {
 		var columnBeenPredicted = false,
-			learnigCellChosen =false, 
-			activeCells = [],
-			updates = [];
+			learnigCellChosen   = false, 
+			activeCells         = [],
+			updates             = [];
 
 		activeColumnIds.forEach(function(column) {
 			columnBeenPredicted = false;
-			learnigCellChosen = false;
+			learnigCellChosen 	= false;
 
+			// 
 			getCells(column).forEach(function (cell) {
-				if(isPredicted(cell) && isSequenceSegment(getPredictingSegment(cell))) {
+				if (isPredicted(cell, t-1) && isSequential(getPredictingSegment(cell, t-1))) {
 
-					columnBeenPredicted = true;
+					columnBeenPredicted     = true;
+					cells[cell]["state"][t] = 1;
 					activeCells.push(cell);
-					// activateCell(cell);
-					cells[cell]["state"] = 1;
 
-					if (segmentActive(getPredictingSegment(cell), "learnState")) {
-						learnigCellChosen = true;
+					if (isActiveSegment(getPredictingSegment(cell, t-1), "learningScore", t-1)) {
+						// console.log(cell + " active with respect to learning...")
+						learnigCellChosen       = true;
 						cells[cell]["learning"] = true;
-						// activateLearning(cell);
 					}
 				}
 			});
 
+			// 
 			if(columnBeenPredicted === false) {
-				activeCells = activeCells.concat(getCells(column));
+				getCells(column).forEach(function (cell) { 
+					cells[cell]["state"][t] = 1;
+					activeCells.push(cell);
+				});
 			}	
 
+			// 
 			if (learnigCellChosen === false) {
-				var bestCell = getBestMatchingCell(column),
-					bestSegment = getBestMatchingSegment(bestCell);
+				var bestCell    = getBestMatch(column, t)[0],
+					bestSegment = getBestMatch(column, t)[1];
 
 				// activateLearning(bestCell);
+				// console.log(bestCell + " now learning... ")
 				cells[bestCell]["learning"] = true;
-				updates.push(bestSegment);
+				segments[bestSegment]["sequential"] = true;
+				// updates.push(bestSegment);
 			}
 
 		});
@@ -178,10 +225,10 @@ var TemporalPooler = function (activationThreshold) {
 	this.computeActiveCells = computeActiveCells;
 
 
-	var computePredictions = function (activeCells) {
+	var computePredictions = function (activeCells, t) {
 		var activationCount = {},
 			columns = new SimpleSet(),
-			cells = new SimpleSet();
+			cells   = new SimpleSet();
 
 		// Set the activation count
 		activeCells.forEach(function (cell) {
@@ -189,14 +236,21 @@ var TemporalPooler = function (activationThreshold) {
 				// if ```undefined``` initialize with ```zero```
 				activationCount[seg] = activationCount[seg] || 0;
 				activationCount[seg] += 1;
+
+				setScore(seg, t, getScore(seg, t) + 1);
+				if(isLearning(cell))
+					setLearningScore(seg, t, getLearningScore(seg, t) + 1);
 			});
-		})
+		});
 
 		for (seg in activationCount) {
 			if(activationCount[seg] >= activationThreshold) {
-				columns.add( getColumn(getListeningCell(seg)) );
-				cells.add(getListeningCell(seg));
-				setPredictingSegment(cell, seg);
+				
+				setState(getListeningCell(seg), 2, t);
+
+				columns.add( getColumn( getListeningCell(seg) ) );
+				cells.add( getListeningCell(seg) );
+				setPredictingSegment( getListeningCell(seg), seg, t);
 				// Todo: Reward the synapses involved?
 			} 			
 		}
@@ -208,20 +262,20 @@ var TemporalPooler = function (activationThreshold) {
 			"cellsDict": cells
 		};
 	}
-
 	this.computePredictions = computePredictions;
 
 	var processInput= function (activeBits) {
-		var activeBits = activeBits,
-			activeCells = computeActiveCells(activeBits),
-			predictions = computePredictions(activeCells),
+
+		var activeBits  = activeBits,
+			activeCells = computeActiveCells(activeBits, t),
+			predictions = computePredictions(activeCells, t),
 			predictedColumns = predictions["columns"],
-			predictedCells = predictions["cells"];
+			predictedCells   = predictions["cells"];
 			
 		history.push({
-			"activeBits": activeBits.slice(),
+			"activeBits" : activeBits.slice(),
 			"activeCells": activeCells.slice(),
-			"predictedCells": predictedCells.slice(),
+			"predictedCells"  : predictedCells.slice(),
 			"predictedColumns": predictedColumns.slice()
 		});
 
@@ -234,6 +288,8 @@ var TemporalPooler = function (activationThreshold) {
 		predictedCells.forEach(function (cell) {
 			setState(cell, 2);
 		});
+
+		t += 1;
 
 		return activeBits.concat(predictedColumns);
 	};

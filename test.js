@@ -24,10 +24,12 @@ for (var i=0; i<1000; i++) {
 
 
 var minOverlap = 4,
-	desiredLocalActivity = 9,
-	activationThreshold  = 8,
+	desiredLocalActivity = 10,
+	activationThreshold  = 5,
 	spatialPooler  = new SpatialPooler(minOverlap, desiredLocalActivity).configure(config.spatial),
 	temporalPooler = new TemporalPooler(activationThreshold).configure(config.temporal),
+	spatialPooler2  = new SpatialPooler(minOverlap, desiredLocalActivity).configure(config2.spatial),
+	temporalPooler2 = new TemporalPooler(activationThreshold).configure(config2.temporal),
 	input = [],
 	sparseInput = [],
 	prediction = [];
@@ -35,8 +37,8 @@ var minOverlap = 4,
 
 var drawPool = function (position, size, tempPool, stage) {
 	var history  = tempPool.getHistory(),
-		numCols  = temporalPooler.getData().numCols,
-		numCells = temporalPooler.getData().numCells,
+		numCols  = tempPool.getData().numCols,
+		numCells = tempPool.getData().numCells,
 		hist0    = history[history.length - 1],
 		input0   = hist0.activeBits,
 		activeCells0 = hist0.activeCells,
@@ -79,7 +81,7 @@ var drawPool = function (position, size, tempPool, stage) {
 	});
 
 	predictedColumns0.forEach(function (id) {
-		color = "rgba(0, 0, 0, 1.0)";
+		color = "rgba(0, 0, 0, 0.5)";
 		x = position[0] + id*(size[0] + 1);
 		y = position[1] - (size[1]+1);
 		stage.rect(
@@ -89,7 +91,7 @@ var drawPool = function (position, size, tempPool, stage) {
 		);
 	});
 	input0.forEach(function (id) {
-		color = "rgba(0, 0, 0, 1.0)";
+		color = "rgba(0, 0, 0, 0.5)";
 		x = position[0] + id*(size[0] + 1);
 		y = position[1] - (size[1]+1);
 		stage.rect(
@@ -130,14 +132,13 @@ setInterval(function () {
 
 	stage.clear();
 	
-	activeCells = temporalPooler.computeActiveCells(sparseInput);
-	predictedCells = temporalPooler.computePredictions(activeCells).cells;
-	predictedColumns = temporalPooler.computePredictions(activeCells).columns;
-
 	processedInput = temporalPooler.processInput(sparseInput);
-	// console.log(activeCells);
 
-	drawPool([10,10], [5,5], temporalPooler, stage)
+	// temporalPooler2.processInput(spatialPooler2.getSparseRepresentation(processedInput));
+	// spatialPooler2.learn()
+
+	drawPool([10,200], [2,2], temporalPooler, stage)
+	// drawPool([10,10], [1,1], temporalPooler2, stage)
 
 
 

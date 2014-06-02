@@ -184,8 +184,9 @@ var TemporalPooler = function (activationThreshold) {
 
 			// 
 			getCells(column).forEach(function (cell) {
-				if (isPredicted(cell, t-1) && isSequential(getPredictingSegment(cell, t-1))) {
-
+				// if (isPredicted(cell, t-1) && isSequential(getPredictingSegment(cell, t-1))) {
+				if (isPredicted(cell, t-1)) {
+					console.log(cell)
 					columnBeenPredicted     = true;
 					cells[cell]["state"][t] = 1;
 					activeCells.push(cell);
@@ -214,6 +215,7 @@ var TemporalPooler = function (activationThreshold) {
 				// activateLearning(bestCell);
 				// console.log(bestCell + " now learning... ")
 				cells[bestCell]["learning"] = true;
+
 				segments[bestSegment]["sequential"] = true;
 				// updates.push(bestSegment);
 			}
@@ -281,13 +283,13 @@ var TemporalPooler = function (activationThreshold) {
 
 		// Todo: this screams for a better solution
 		// clear the cell state
-		getCells().forEach(function (cell) {
-			setState(cell, 0);
-		});
+		// getCells().forEach(function (cell) {
+		// 	setState(cell, 0);
+		// });
 		// enter the current predictions
-		predictedCells.forEach(function (cell) {
-			setState(cell, 2);
-		});
+		// predictedCells.forEach(function (cell) {
+		// 	setState(cell, 2);
+		// });
 
 		t += 1;
 

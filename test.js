@@ -104,19 +104,22 @@ var drawPool = function (position, size, tempPool, stage) {
 
 }
 
-var draw = function (segments, position, size, color,  stage) {
-	var i = 0;
-	for( s in segments) {
+var drawInput = function (position, size, inputs, stage) {
+	var x,z, color, scalar;
+	inputs.slice(0,20).forEach(function(input, j) { 
+		scalar = 1 - j/20;
+		for(var i=0, max=input.length; i<max; i++) {
 
-		if(!(segments instanceof Array)) i = parseInt(s);
-		else i = segments[s];
-
-		stage.rect(
-			[ i*(size[0] +1) + position[0], position[1]],
-			size,
-			color
-		);
-	}
+			color = input[i]===1 ? "rgba(0,0,0, "+ scalar + ")" : "rgba(200, 200, 200, "+ scalar + ")";
+			x = position[0] + i*(size[0] + 1);
+			y = position[1] + (j - 1)*(size[1]+1);
+			stage.rect(
+				[x,y],
+				size,
+				color
+			);
+		}
+	})
 }
 
 
@@ -124,21 +127,24 @@ var draw = function (segments, position, size, color,  stage) {
 
 
 setInterval(function () {
-	input = inputs.pop();
+	stage.clear();
+	drawInput([10,150], [5,5], inputs, stage)
+	
+	input = inputs.shift();
 	sparseInput = spatialPooler.getSparseRepresentation(getActiveBits(input));
 	spatialPooler.learn()
 	
 
 
-	stage.clear();
 	
 	processedInput = temporalPooler.processInput(sparseInput);
 
-	// temporalPooler2.processInput(spatialPooler2.getSparseRepresentation(processedInput));
-	// spatialPooler2.learn()
+	temporalPooler2.processInput(spatialPooler2.getSparseRepresentation(processedInput));
+	spatialPooler2.learn()
 
-	drawPool([10,200], [2,2], temporalPooler, stage)
-	// drawPool([10,10], [1,1], temporalPooler2, stage)
+
+	drawPool([10,100], [2,2], temporalPooler, stage)
+	drawPool([10,10], [2,2], temporalPooler2, stage)
 
 
 

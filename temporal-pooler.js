@@ -186,7 +186,7 @@ var TemporalPooler = function (activationThreshold) {
 			getCells(column).forEach(function (cell) {
 				// if (isPredicted(cell, t-1) && isSequential(getPredictingSegment(cell, t-1))) {
 				if (isPredicted(cell, t-1)) {
-					console.log(cell)
+
 					columnBeenPredicted     = true;
 					cells[cell]["state"][t] = 1;
 					activeCells.push(cell);

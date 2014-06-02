@@ -1,2 +1,14 @@
 
 
+
+
+Remarks/Questions/Random Thoughts:
+==================================
+
+-> when the input is sparse and we are in the situation that our representation is very distinct/memory-loaded then very few cells will be able to switch to a predictive state. just by the simple fact that very few cells are active and the threshold has to be exceeded.
+
+-> the desired local activity, i.e. how sparse the represtation of the binary input is chosen, should be somehow related to the activation threshold and the number of cells per column. because if only a very small number of columns is active, it is hard to exceed the threshold obviously.
+
+-> right now the predicted cells get activated. what if we activate their complement?? that would create more predictions, and therefore, if the predicted column gets activated, we end up with more active cells, making more predictions... 
+---> on the other hand if all cells in a column get predicted, we end up with no active cells in case the column really gets bottom-up input.
+---> this is probably not what u want: a column beeing in two different states (having two distinct histories) would mean that their active cells differ by just a very few number of non-active cells. That would imply that the predictions would be quite close to each other, which is unlikely given the fact that the histories may differ a lot!

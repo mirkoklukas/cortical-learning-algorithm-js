@@ -46,7 +46,7 @@ def read(digits, dataset = "training", path = "."):
 if __name__ == '__main__':
 
     images, labels = read([0,1], 'training')
-    data = "var input = ["
+    data = "var inputs = ["
     pics = []
     for j in range(100):
         imgstr = ""
@@ -61,7 +61,7 @@ if __name__ == '__main__':
     data += ", ".join(pics)
     data += "]"
 
-    with open("input.js","w") as output_file:
+    with open("input.json","w") as output_file:
         output_file.write( data )
     # print ", \n".join(map(str, images[1]))
     # imshow(images[8], cmap=cm.gray)

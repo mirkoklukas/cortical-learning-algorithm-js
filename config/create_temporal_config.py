@@ -21,15 +21,20 @@ def create_temporal_config(numCols, numCells, numSegs, numSyns):
     cells = dict([ (c, { 
         "id": c, 
         "column": None, 
-        "state": 0, 
+        "state": [], 
+        "learning": False, 
         "feedingSegs": [ (s + c*numSegs) for s in range(numSegs) ], 
-        "listeningSegs": []  
+        "listeningSegs": [],
+        "predictingSegement": []
     }) for c in range(numCols*numCells) ])
 
     segs = dict([ (s, { 
         "id": s, 
+        "sequential": False,
         "feedingCells": distrib.rvs(size=numSyns).tolist(), 
-        "listeningCell": None 
+        "listeningCell": None,
+        "score": [],
+        "learningScore": []
     }) for s in range(numCols*numCells*numSegs)])
 
 

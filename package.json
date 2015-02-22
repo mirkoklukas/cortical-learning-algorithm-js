@@ -1,0 +1,26 @@
+{
+  "name": "cortical-learning-algorithm",
+  "version": "0.0.0",
+  "description": "Towards an implementation of hierarchical temporal memory and the cortical learning algorithm by Jeff Hawkins and Dileep George of Numenta, Inc.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "make test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mirkoklukas/cortical-learning-algorithm-js.git"
+  },
+  "author": "Mirko Klukas <mirko.klukas@gmail.com>",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/mirkoklukas/cortical-learning-algorithm-js/issues"
+  },
+  "homepage": "https://github.com/mirkoklukas/cortical-learning-algorithm-js",
+  "devDependencies": {
+    "chai": "^2.0.0",
+    "mocha": "^2.1.0"
+  }
+}

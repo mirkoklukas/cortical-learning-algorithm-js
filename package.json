@@ -21,6 +21,7 @@
   "homepage": "https://github.com/mirkoklukas/cortical-learning-algorithm-js",
   "devDependencies": {
     "chai": "^2.1.0",
-    "mocha": "^2.1.0"
+    "mocha": "^2.1.0",
+    "underscore": "1.4.14"
   }
 }

@@ -100,7 +100,7 @@ describe('Temporal Pooler', function () {
 
 	describe('#computeOutput', function () {
 		it('should return the union of the input and predicted columns', function () {
-			expect(Set(tempPooler.computeOutput([1,3,4], prediction)) ).to.deep.equal(Set([1, 2, 3, 4]));
+			expect(new Set(tempPooler.computeOutput([1,3,4], prediction)) ).to.deep.equal(new Set([1, 2, 3, 4]));
 		});
 	});
 

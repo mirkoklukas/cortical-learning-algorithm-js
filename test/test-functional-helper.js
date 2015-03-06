@@ -90,16 +90,13 @@ describe('Functional Helper', function () {
 						D(null, result('<0, >-10')), 
 						D(null, result('<0, <-10'))))
 
-
 		it('is pending')
-		it('', function () {
-			expect(d(2)).to.equal(">0, < 10")
-			expect(d(20)).to.equal(">0, > 10")
-			expect(d(-2)).to.equal("<0, >-10")
+		// it('...', function () {
+		// 	expect(d(2)).to.equal(">0, < 10")
+		// 	expect(d(20)).to.equal(">0, > 10")
+		// 	expect(d(-2)).to.equal("<0, >-10")
+		// });
 
-
-
-		});
 	});
 	
 });

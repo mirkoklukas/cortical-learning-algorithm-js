@@ -20,8 +20,8 @@
   },
   "homepage": "https://github.com/mirkoklukas/cortical-learning-algorithm-js",
   "dependencies" : {
-    "underscore": "^1.4.14",
-    "winston": "^1.4.14"
+    "underscore": "1.8.2",
+    "winston": "0.9.0"
     },
   "devDependencies": {
     "chai": "^2.1.0",

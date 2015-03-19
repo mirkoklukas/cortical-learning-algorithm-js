@@ -58,11 +58,11 @@ describe('Functional Helper', function () {
 		});
 	});
 
-	describe("#max", function () {
+	describe("#argmax", function () {
 		it('should return the maximum of an array', function () {
-			expect(fh.max([1,242,3])).
+			expect(fh.argmax([1,242,3])).
 				to.equal(242);
-			expect(fh.max([{'val': 1},{'val': 2},{'val': 24}], fh.prop("val"))).
+			expect(fh.argmax([{'val': 1},{'val': 2},{'val': 24}], fh.prop("val"))).
 				to.deep.equal({'val': 24});
 		});
 	});

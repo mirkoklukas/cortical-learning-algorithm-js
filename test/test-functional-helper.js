@@ -38,9 +38,18 @@ describe('Functional Helper', function () {
 		var adjuster = fh.adjuster;
 		var m = new Map([[0,0], [1, 1]]);
 
-		it('should behave like insertWith with fixed mutator and initial value', function () {
+		it('should behave like adjuster with fixed mutator and initial value', function () {
 			expect(adjuster(fh.add, 100)(m, 2).toList()).to.deep.equal([[0,0], [1, 1], [2,100]])
 			expect(adjuster(fh.addN(1), 100)(m, 0).toList()).to.deep.equal([[0,1], [1, 1], [2,100]])
+		});
+	});
+
+	describe("#concat", function () {
+		var a = [1,2]
+		var b = [3,4]
+		it('should produce the concatenation of TWO functions', function () {
+			expect(fh.concat(a,b)).to.include.members([1,2,3,4])
+
 		});
 	});
 
@@ -48,6 +57,16 @@ describe('Functional Helper', function () {
 
 		it('should produce the concatenation of TWO functions', function () {
 			expect(fh.compose(fh.addN(2),fh.add)(2, 2)).to.equal(6)
+
+		});
+	});
+
+	describe("#combine", function () {
+		var combine = fh.combine;
+		var result = combine(fh.add, fh.add)(1,1)
+		it('should produce the array collected values', function () {
+			expect(fh.fst(result)).to.equal(2)
+			expect(fh.snd(result)).to.equal(2)
 
 		});
 	});
@@ -76,6 +95,28 @@ describe('Functional Helper', function () {
 		});
 	});
 
+	describe("#pickRandom", function () {
+		var pickRandom = fh.pickRandom;
+		var m = [1,2,3];
+
+		it('should pick random from list', function () {
+			expect(m).to.include(pickRandom(m))
+		});
+	});
+
+	describe("#getProp", function () {
+		var getProp = fh.getProp;
+		var fst = fh.fst;
+		var snd = fh.snd;
+		var m = [1,2,3];
+
+		it('should pick element from list', function () {
+			expect(fst(m)).to.equal(1)
+			expect(snd(m)).to.equal(2)
+			expect(getProp(2)(m)).to.equal(3)
+		});
+	});
+
 	describe("#decision", function () {
 		var D = fh.Decision;
 		var result = function (x) {
@@ -90,12 +131,12 @@ describe('Functional Helper', function () {
 						D(null, result('<0, >-10')), 
 						D(null, result('<0, <-10'))))
 
-		it('is pending')
-		// it('...', function () {
-		// 	expect(d(2)).to.equal(">0, < 10")
-		// 	expect(d(20)).to.equal(">0, > 10")
-		// 	expect(d(-2)).to.equal("<0, >-10")
-		// });
+		it('should get decision based on condition or mutate values', function () {
+			expect(d(2)).to.equal(">0, < 10")
+			expect(d(20)).to.equal(">0, > 10")
+			expect(d(-2)).to.equal("<0, >-10")
+			expect(d(-20)).to.equal("<0, <-10")
+		});
 
 	});
 	
